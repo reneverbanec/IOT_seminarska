@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Vmesnik</title>
+</head>
+
+<style>
+            html    {text-align: center; font-family:Arial, sans-serif }
+            body    { margin-top: 50px}
+            h1      {color: #444444}
+
+            table {margin-left: auto; margin-right: auto; margin-bottom: 10px;}
+            .tg  {border-collapse:collapse;border-color:#9ABAD9;border-spacing:0;}
+            .tg td{background-color:#EBF5FF;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#444;
+            font-family:Arial, sans-serif;overflow:hidden;padding:10px 5px;word-break:normal;}
+            .tg th{background-color:#409cff;border-color:#9ABAD9;border-style:solid;border-width:1px;color:#fff;
+            font-family:Arial, sans-serif;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+            .tg .tg-0tde{font-family:"Comic Sans MS", cursive, sans-serif !important;text-align:center;vertical-align:top}
+            .tg .tg-abk0{font-family:"Comic Sans MS", cursive, sans-serif !important;text-align:left;vertical-align:top}
+
+            /* CSS */
+            .button-9 {
+            appearance: button;
+            backface-visibility: hidden;
+            background-color: #405cf5;
+            border-radius: 6px;
+            border-width: 0;
+            box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+            box-sizing: border-box;
+            color: #fff;
+            cursor: pointer;
+            font-size: 100%;
+            height: 44px;
+            line-height: 1.15;
+            margin: 12px 0 0;
+            outline: none;
+            overflow: hidden;
+            padding: 0 25px;
+            position: relative;
+            text-align: center;
+            text-transform: none;
+            transform: translateZ(0);
+            transition: all .2s,box-shadow .08s ease-in;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            width: 100%;
+            }
+</style>
+
+<body>
+            <h1>Naloga1</h1>
+            <table class="tg">
+            <thead>
+                <tr>
+                    <th class="tg-0tde" colspan="2">ESP1</th>
+                    <th class="tg-0tde" colspan="2">ESP2</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(1, povezava1)">Prižgi LED1</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(2, povezava1)">Prižgi LED2</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(1, povezava2)">Prižgi LED3</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(2, povezava2)">Prižgi LED4</button></td>
+            </tr>
+            <tr>
+                <td class="tg-0tde"> <button class="button-9"  onclick="ugasniLED(1, povezava1)"">Ugasni LED1</button></td>
+                <td class="tg-0tde"> <button class="button-9"  onclick="ugasniLED(2, povezava1)"">Ugasni LED2</button></td>
+                <td class="tg-0tde"> <button class="button-9"  onclick="ugasniLED(1, povezava2)"">Ugasni LED3</button></td>
+                <td class="tg-0tde"> <button class="button-9"  onclick="ugasniLED(2, povezava2)"">Ugasni LED4</button></td>
+            </tr>
+            <tr>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(12, povezava1)">Prižgi LED1/LED2</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="ugasniLED(12, povezava1)"">Ugasni LED1/LED2</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="prizgiLED(12, povezava2)">Prižgi LED3/LED4</button></td>
+                <td class="tg-0tde"> <button class="button-9" onclick="ugasniLED(12, povezava2)"">Ugasni LED3/LED4</button></td>
+            </tr>
+            <tr>
+                <td class="tg-0tde" colspan="4">
+                    <button class="button-9" onclick="prizgiLED(1111, 'vsi')">Prižgi vse LED</button>
+
+                </td>
+            </tr>
+            <tr>
+                <td class="tg-0tde" colspan="4"><button class="button-9" onclick="ugasniLED(1111, 'vsi')">Ugasni vse LED</button></td>
+            </tr>
+            <tr>
+                <td class="tg-0tde" colspan="4"><button class="button-9" onclick="izmenicno()">Izmenično LED1/LED2 in LED3/LED4</button></td>
+            </tr>
+            </tbody>
+            </table>
+
+
+    <script type="text/javascript" charset="utf-8">
+    "use strict"; //modus strict nam omogoča uporabo razredov
+      
+
+    var povezava1 = new WebSocket('ws://192.168.1.14:81'); // Vzpostavimo ws povezavo s prvim ESP32 modulom
+    var povezava2 = new WebSocket('ws://192.168.1.19:81'); // Vzpostavimo ws povezavo s drugim ESP32 modulom
+
+    
+    
+    function prizgiLED(pin, povezava){ // funkcija za prižig PINOV
+        var objekt = {"tipSporočila":"LED","pin":pin,"vrednost":1}; // Sestavljen objekt iz argumentov
+        var JSONsporočilo = JSON.stringify(objekt); //pretvorimo objekt JSON v string
+        console.log(JSONsporočilo); // izpišemo podatke
+        if(povezava == "vsi"){ // če je argument "vsi" pošljemo vsem
+            povezava1.send(JSONsporočilo);
+            povezava2.send(JSONsporočilo);
+        }
+        else{
+            povezava.send(JSONsporočilo); // pošljemo pravilnemu ESP32 modulu
+        }
+
+
+    }
+
+     function ugasniLED(pin, povezava){ // funkcija za prižig PINOV
+        var objekt = {"tipSporočila":"LED","pin":pin,"vrednost":0}; // Sestavljen objekt iz argumentov
+        var JSONsporočilo = JSON.stringify(objekt); //pretvorimo objekt JSON v string
+        console.log(JSONsporočilo); // izpišemo podatke
+        if(povezava == 'vsi'){ // če je argument "vsi" pošljemo vsem
+            povezava1.send(JSONsporočilo);
+            povezava2.send(JSONsporočilo);
+        }
+        else{
+            povezava.send(JSONsporočilo); // pošljemo pravilnemu ESP32 modulu
+        }
+       
+    }
+    var stevec = 0; // za izmenično funkcijo
+    function izmenicno(){
+        if( stevec % 2 == 0){ // ce bo ostanek enak 0
+            ugasniLED(12, povezava1)
+            prizgiLED(12, povezava2)
+        }
+        else { // ce bo ostanek vecji od 0 
+            ugasniLED(12, povezava2)
+            prizgiLED(12, povezava1)
+        }
+        stevec++
+        console.log(stevec) // izpis števca
+    }
+
+
+    </script>
+</body>
+</html>
