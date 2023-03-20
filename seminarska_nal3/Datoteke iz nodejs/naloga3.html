@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fotoupornik</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- Knjižnica za grafikon-->
+   <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+    button {
+      background-color: #4ca8af;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      transition-duration: 0.4s;
+      border-radius: 8px;
+    }
+
+    button:hover {
+      background-color: #00e8f8;
+    }
+
+    p {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="plot"></div> <!-- Tukaj je grafikon-->
+  <button id="toggleButton">Toggle LED</button> <!-- Tukaj je gumb-->
+  <p id="status"></p> 
+  <script>
+    const trace = { // Objekt za podatke
+      x: [], // x os - čas
+      y: [], // y os - vrednosti fotoupornika 
+      mode: 'lines', // prikaz bo v črti
+      line: {color: 'rgb(14, 154, 237)'} // modra barva črte
+    };
+
+    const layout = { // objekt za grafikon
+      title: 'Fotoupornik', // naslov
+      xaxis: {title: 'Čas'}, // Naslov x osi
+      yaxis: {title: 'Vrednost'} // Naslov y osi
+    };
+
+     Plotly.newPlot('plot', [trace], layout); // ustvarjanje grafikona
+
+
+    const ws = new WebSocket('ws://' + location.host); // // ustvarjanje nove websocket povezave location.host = enak naslov kot je serviral spletno stran
+    const statusElement = document.getElementById("status"); // za spreminjanje vrednosti stanja LED diode
+
+    ws.onmessage = (event) => { // ob prejemu sporočila preko websocket
+      try {
+        const data = JSON.parse(event.data); // razlčenimo JSON
+
+        if (data.type === "status") { // Preverimo stanje LED diode
+          const statusText = data.value ? "LED je vklopljena" : "LED je izklopljena";
+          statusElement.innerHTML = statusText;
+        } else if (data.type === "LEDDisconnected") { // v primeru da se izklopi LED
+          alert("Prosim preverite LED");
+        } else if (data.type === "mappedValue") { // vrednost fotoupornika
+          const now = new Date(); // Trennutni čas (za risanje na grafikonu)
+
+        trace.x.push(now); // Dodaj čas na x os
+        trace.y.push(data.value); // Dodaj vrednost na y os
+
+        if (trace.x.length > 50) { // če je število točk na grafikonu več kot 50 
+          trace.x.shift(); // se odstrani točka
+          trace.y.shift(); // se odstrani točka
+        }
+
+          Plotly.update('plot', { x: [trace.x], y: [trace.y] }); // posodobi grafikon z novimi prejetimi podatki
+        }
+      } catch (error) {
+        console.error("Error parsing JSON:", error);  // v primeru napake v JSON
+      }
+    };
+
+    toggleButton.addEventListener('click', () => { // kaj se zgodi ob kliku na gumb
+      const toggleMessage = { type: 'toggleLED' };
+      ws.send(JSON.stringify(toggleMessage));
+      console.log("Toggle LED message sent");
+    });
+  </script>
+</body>
+</html>
